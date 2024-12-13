@@ -1,4 +1,4 @@
-package main
+package websocket
 
 import (
 	"encoding/json"
@@ -8,33 +8,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Data structure for the Data field
-type Data struct {
-	Value int `json:"value"`
-}
-
-// Message structure
-type Message struct {
-	Type string          `json:"type"`
-	Data json.RawMessage `json:"data"`
-}
-
-// Message type constants
-const (
-	UpdateCounter    = "UpdateCounter"
-	IncrementCounter = "IncrementCounter"
-	TestTwo          = "TestTwo"
-)
-
-// Utility function to pretty-print JSON
-func prettyPrintJSON(v interface{}) string {
-	data, err := json.Marshal(v) // Serialize to JSON without indentation
-	if err != nil {
-		return "Error encoding JSON"
-	}
-	return string(data)
-}
-
 // WebSocket connection configuration
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -42,7 +15,8 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func wsHandler(w http.ResponseWriter, r *http.Request) {
+// WebSocket Handler function
+func WSHandler(w http.ResponseWriter, r *http.Request) {
 	// Upgrade connection to WebSocket
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -101,13 +75,4 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println("Response sent:", prettyPrintJSON(response))
 		}
 	}
-}
-
-func main() {
-	// Register WebSocket handler at path "/"
-	http.HandleFunc("/", wsHandler)
-
-	// Start server on 127.0.0.1:8042
-	log.Println("Server started on port :8042")
-	log.Fatal(http.ListenAndServe("127.0.0.1:8042", nil))
 }
