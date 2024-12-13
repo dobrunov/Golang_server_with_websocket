@@ -26,6 +26,15 @@ const (
 	TestTwo          = "TestTwo"
 )
 
+// Utility function to pretty-print JSON
+func prettyPrintJSON(v interface{}) string {
+	data, err := json.Marshal(v) // Serialize to JSON without indentation
+	if err != nil {
+		return "Error encoding JSON"
+	}
+	return string(data)
+}
+
 // WebSocket connection configuration
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -44,6 +53,17 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("New connection established successfully")
 
+	// Send "Connected" message to client
+	connectedMessage := Message{
+		Type: "Connected",
+		Data: json.RawMessage(`{"message": "Welcome!"}`),
+	}
+	if err := conn.WriteJSON(connectedMessage); err != nil {
+		log.Println("Error sending connected message:", err)
+		return
+	}
+	log.Println("Connected message sent:", prettyPrintJSON(connectedMessage))
+
 	for {
 		var msg Message
 		err := conn.ReadJSON(&msg)
@@ -52,7 +72,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Printf("Message received: %v\n", msg)
+		log.Printf("Message received: %s\n", prettyPrintJSON(msg))
 
 		// Parse the Data field
 		var data Data
@@ -78,7 +98,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 				log.Println("Error sending response:", err)
 				return
 			}
-			log.Println("Response sent:", response)
+			log.Println("Response sent:", prettyPrintJSON(response))
 		}
 	}
 }
